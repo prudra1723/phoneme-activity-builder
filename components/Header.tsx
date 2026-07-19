@@ -1,25 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import MobileMenu from "@/components/MobileMenu";
-
-const navigationItems = [
-  { href: "/", label: "Home" },
-  { href: "/wordle", label: "Wordle" },
-  { href: "/word-search", label: "Word Search" },
-  { href: "/about", label: "About" },
-  { href: "/settings", label: "Settings" },
-];
+import Navigation from "@/components/Navigation";
 
 export default function Header() {
-  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const closeMenu = () => {
     setMenuOpen(false);
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen((currentState) => !currentState);
   };
 
   return (
@@ -38,38 +33,10 @@ export default function Header() {
 
             <span className="brand-text">
               <strong>Phoneme Activity Builder</strong>
-              <small>Assessment 1</small>
             </span>
           </Link>
 
-          <nav
-            id="desktop-navigation"
-            className="primary-navigation"
-            aria-label="Primary navigation"
-          >
-            <ul>
-              {navigationItems.map((item) => {
-                const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
-
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={
-                        isActive ? "navigation-link active" : "navigation-link"
-                      }
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+          <Navigation onNavigate={closeMenu} />
 
           <button
             type="button"
@@ -79,11 +46,11 @@ export default function Header() {
             }
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
-            onClick={() => setMenuOpen((current) => !current)}
+            onClick={toggleMenu}
           >
-            <span />
-            <span />
-            <span />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </button>
         </div>
       </header>
