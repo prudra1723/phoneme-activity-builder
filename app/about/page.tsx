@@ -317,6 +317,85 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <section
+        className="references-section"
+        aria-labelledby="references-heading"
+      >
+        <div className="page-container">
+          <div className="section-heading">
+            <p className="eyebrow">Research and guidance</p>
+            <h2 id="references-heading">References</h2>
+            <p>
+              Academic and industry sources used to guide the project&apos;s
+              component structure, accessibility and phoneme-based design.
+            </p>
+          </div>
+
+          <ol className="reference-list">
+            <li>
+              International Phonetic Association. (n.d.).{" "}
+              <cite>The International Phonetic Alphabet and the IPA chart</cite>
+              .{" "}
+              <a
+                href="https://www.internationalphoneticassociation.org/content/ipa-chart"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://www.internationalphoneticassociation.org/content/ipa-chart
+              </a>
+            </li>
+
+            <li>
+              Meta Platforms, Inc. (n.d.). <cite>Thinking in React</cite>.
+              React.{" "}
+              <a
+                href="https://react.dev/learn/thinking-in-react"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://react.dev/learn/thinking-in-react
+              </a>
+            </li>
+
+            <li>
+              Mozilla. (2026, May 20).{" "}
+              <cite>HTML: A good basis for accessibility</cite>. MDN Web Docs.{" "}
+              <a
+                href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML
+              </a>
+            </li>
+
+            <li>
+              Vercel. (n.d.). <cite>Next.js documentation: App Router</cite>.
+              Next.js.{" "}
+              <a
+                href="https://nextjs.org/docs/app"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://nextjs.org/docs/app
+              </a>
+            </li>
+
+            <li>
+              World Wide Web Consortium. (2024, December 12).{" "}
+              <cite>Web Content Accessibility Guidelines (WCAG) 2.2</cite>.{" "}
+              <a
+                href="https://www.w3.org/TR/WCAG22/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://www.w3.org/TR/WCAG22/
+              </a>
+            </li>
+          </ol>
+        </div>
+      </section>
     </main>
   );
 }

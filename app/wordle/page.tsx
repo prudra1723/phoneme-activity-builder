@@ -75,40 +75,46 @@ export default function WordlePage() {
         className="wordle-help-section"
         aria-labelledby="wordle-help-heading"
       >
-        <div className="page-container help-grid">
-          <article>
-            <span className="help-icon" aria-hidden="true">
-              /θ/
-            </span>
-            <h2 id="wordle-help-heading">Phoneme-first design</h2>
-            <p>
-              The activity uses phoneme symbols as the primary input rather than
-              standard English spelling. This supports pronunciation and
-              sound-awareness teaching.
-            </p>
-          </article>
+        <div className="page-container">
+          <h2 id="wordle-help-heading" className="sr-only">
+            Wordle activity information
+          </h2>
 
-          <article>
-            <span className="help-icon" aria-hidden="true">
-              ?
-            </span>
-            <h2>Helpful equivalences</h2>
-            <p>
-              Learners can hover over or focus on phoneme controls to see
-              English-letter guidance, such as “/θ/ — TH as in thin”.
-            </p>
-          </article>
+          <div className="help-grid">
+            <article>
+              <span className="help-icon" aria-hidden="true">
+                /θ/
+              </span>
+              <h3>Phoneme-first design</h3>
+              <p>
+                The activity uses phoneme symbols as the primary input rather
+                than standard English spelling. This supports pronunciation and
+                sound-awareness teaching.
+              </p>
+            </article>
 
-          <article>
-            <span className="help-icon" aria-hidden="true">
-              ↓
-            </span>
-            <h2>One portable file</h2>
-            <p>
-              The Generate button downloads one HTML file containing its own
-              layout, styles and gameplay JavaScript.
-            </p>
-          </article>
+            <article>
+              <span className="help-icon" aria-hidden="true">
+                ?
+              </span>
+              <h3>Helpful equivalences</h3>
+              <p>
+                Learners can hover over or focus on phoneme controls to see
+                English-letter guidance, such as “/θ/ — TH as in thin”.
+              </p>
+            </article>
+
+            <article>
+              <span className="help-icon" aria-hidden="true">
+                ↓
+              </span>
+              <h3>One portable file</h3>
+              <p>
+                The Generate button downloads one HTML file containing its own
+                layout, styles and gameplay JavaScript.
+              </p>
+            </article>
+          </div>
         </div>
       </section>
     </main>
