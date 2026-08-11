@@ -210,23 +210,17 @@ export default function AboutPage() {
                 <span>Presented by Rudra Pandey</span>
               </div>
 
-              <span className="video-duration">Short guide</span>
+              <span className="video-duration">17:20</span>
             </div>
 
             <video
               className="instruction-video"
               controls
               preload="metadata"
+              playsInline
               aria-label="Video explaining how to use the Phoneme Activity Builder"
             >
-              <source src="/videos/how-to-use.mp4" type="video/mp4" />
-              <track
-                kind="captions"
-                src="/videos/how-to-use-captions.vtt"
-                srcLang="en"
-                label="English captions"
-                default
-              />
+              <source src="/videos/assessment-1.mp4" type="video/mp4" />
               Your browser does not support HTML video. A written guide is
               provided below.
             </video>
