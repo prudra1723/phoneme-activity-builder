@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: phoneme-activity-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: phoneme_user
+      POSTGRES_PASSWORD: phoneme_password
+      POSTGRES_DB: phoneme_activity
+    ports:
+      - "55432:5432"
+    volumes:
+      - phoneme_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phoneme_user -d phoneme_activity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  phoneme_postgres_data:

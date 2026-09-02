@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ActivityType {
+  WORDLE
+  WORD_SEARCH
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Phoneme {
+  id        String        @id @default(cuid())
+  symbol    String        @unique @db.VarChar(16)
+  letters   String        @db.VarChar(32)
+  example   String        @db.VarChar(100)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  words     WordPhoneme[]
+}
+
+model Word {
+  id               String         @id @default(cuid())
+  english          String         @unique @db.VarChar(100)
+  phonetic         String         @db.VarChar(100)
+  hint             String?        @db.VarChar(255)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  phonemes         WordPhoneme[]
+  wordLists        WordListWord[]
+  wordleActivities Activity[]     @relation("WordleAnswer")
+}
+
+model WordPhoneme {
+  wordId    String
+  phonemeId String
+  position  Int
+  word      Word    @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  phoneme   Phoneme @relation(fields: [phonemeId], references: [id], onDelete: Restrict)
+
+  @@id([wordId, position])
+  @@index([phonemeId])
+}
+
+model WordList {
+  id          String         @id @default(cuid())
+  name        String         @unique @db.VarChar(100)
+  description String?        @db.VarChar(500)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  words       WordListWord[]
+  activities  Activity[]
+}
+
+model WordListWord {
+  wordListId String
+  wordId     String
+  position   Int
+  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  word       Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@id([wordListId, wordId])
+  @@unique([wordListId, position])
+  @@index([wordId])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  title          String       @db.VarChar(150)
+  type           ActivityType
+  difficulty     Difficulty   @default(EASY)
+  showHints      Boolean      @default(true)
+  maxGuesses     Int?
+  gridSize       Int?
+  outputFilename String?      @db.VarChar(150)
+  includeAnswers Boolean      @default(false)
+  metadata       Json?
+  wordListId     String
+  answerWordId   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  wordList       WordList     @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  answerWord     Word?        @relation("WordleAnswer", fields: [answerWordId], references: [id], onDelete: SetNull)
+
+  @@index([wordListId])
+  @@index([answerWordId])
+  @@index([type])
+}
