@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import { getPhonemeHint, type PhonemeWord } from "@/lib/phonemes";
 
 type WordSearchPreviewProps = {
@@ -11,21 +10,22 @@ type WordSearchPreviewProps = {
   showHints: boolean;
 };
 
-const GRID_SIZE = 8;
+function createSelection(
+  startIndex: number,
+  endIndex: number,
+  gridSize: number,
+) {
+  const startRow = Math.floor(startIndex / gridSize);
+  const startColumn = startIndex % gridSize;
 
-function createSelection(startIndex: number, endIndex: number) {
-  const startRow = Math.floor(startIndex / GRID_SIZE);
-  const startColumn = startIndex % GRID_SIZE;
-
-  const endRow = Math.floor(endIndex / GRID_SIZE);
-  const endColumn = endIndex % GRID_SIZE;
+  const endRow = Math.floor(endIndex / gridSize);
+  const endColumn = endIndex % gridSize;
 
   const rowDifference = endRow - startRow;
   const columnDifference = endColumn - startColumn;
 
   const horizontal = startRow === endRow;
   const vertical = startColumn === endColumn;
-
   const diagonal = Math.abs(rowDifference) === Math.abs(columnDifference);
 
   if (!horizontal && !vertical && !diagonal) {
@@ -34,14 +34,13 @@ function createSelection(startIndex: number, endIndex: number) {
 
   const rowDirection = Math.sign(rowDifference);
   const columnDirection = Math.sign(columnDifference);
-
   const selectedCells: number[] = [];
 
   let currentRow = startRow;
   let currentColumn = startColumn;
 
   while (true) {
-    selectedCells.push(currentRow * GRID_SIZE + currentColumn);
+    selectedCells.push(currentRow * gridSize + currentColumn);
 
     if (currentRow === endRow && currentColumn === endColumn) {
       break;
@@ -67,12 +66,11 @@ export default function WordSearchPreview({
   words,
   showHints,
 }: WordSearchPreviewProps) {
+  const gridSize = Math.sqrt(grid.length);
+
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
-
   const [selectedCells, setSelectedCells] = useState<number[]>([]);
-
   const [foundWordIds, setFoundWordIds] = useState<string[]>([]);
-
   const [message, setMessage] = useState("Select the first phoneme of a word.");
 
   const foundCells = new Set(
@@ -85,20 +83,17 @@ export default function WordSearchPreview({
     if (selectionStart === null) {
       setSelectionStart(cellIndex);
       setSelectedCells([cellIndex]);
-
       setMessage("Now select the last phoneme of the word.");
-
       return;
     }
 
-    const selection = createSelection(selectionStart, cellIndex);
+    const selection = createSelection(selectionStart, cellIndex, gridSize);
 
     setSelectionStart(null);
     setSelectedCells(selection);
 
     if (selection.length === 0) {
       setMessage("Select cells in a horizontal, vertical or diagonal line.");
-
       return;
     }
 
@@ -114,7 +109,6 @@ export default function WordSearchPreview({
 
     if (!matchingWord) {
       setMessage("That selection is not a target word. Try again.");
-
       return;
     }
 
@@ -133,11 +127,11 @@ export default function WordSearchPreview({
     setSelectionStart(null);
     setSelectedCells([]);
     setFoundWordIds([]);
-
     setMessage("Select the first phoneme of a word.");
   };
 
-  const allWordsFound = foundWordIds.length === words.length;
+  const allWordsFound =
+    words.length > 0 && foundWordIds.length === words.length;
 
   return (
     <div className="game-preview">
@@ -160,12 +154,14 @@ export default function WordSearchPreview({
       <div className="word-search-game">
         <div
           className="word-search-grid"
+          style={{
+            gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+          }}
           role="grid"
           aria-label="Phoneme word search grid"
         >
           {grid.map((symbol, index) => {
             const selected = selectedCells.includes(index);
-
             const found = foundCells.has(index);
 
             const stateClass = [
@@ -176,10 +172,8 @@ export default function WordSearchPreview({
               .filter(Boolean)
               .join(" ");
 
-            const row = Math.floor(index / GRID_SIZE) + 1;
-
-            const column = (index % GRID_SIZE) + 1;
-
+            const row = Math.floor(index / gridSize) + 1;
+            const column = (index % gridSize) + 1;
             const hint = getPhonemeHint(symbol);
 
             return (

@@ -4,6 +4,7 @@ import { downloadHtml } from "@/lib/generateWordleHtml";
 type GenerateWordSearchOptions = {
   title: string;
   grid: string[];
+  gridSize: number;
   words: PhonemeWord[];
   showHints: boolean;
   hints: Record<string, string>;
@@ -86,7 +87,7 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(8, minmax(36px, 1fr));
+      grid-template-columns: repeat(${options.gridSize}, minmax(36px, 1fr));
       gap: 5px;
     }
 
@@ -259,7 +260,7 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
       }
 
       .grid {
-        grid-template-columns: repeat(8, minmax(31px, 1fr));
+        grid-template-columns: repeat(${options.gridSize}, minmax(31px, 1fr));
         gap: 3px;
       }
 
@@ -344,6 +345,7 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
 
   <script>
     const data = ${data};
+    const gridSize = data.gridSize;
 
     let selectionStart = null;
     let selectedCells = [];
@@ -362,11 +364,11 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
       document.getElementById("completion-message");
 
     function createSelection(startIndex, endIndex) {
-      const startRow = Math.floor(startIndex / 8);
-      const startColumn = startIndex % 8;
+      const startRow = Math.floor(startIndex / gridSize);
+      const startColumn = startIndex % gridSize;
 
-      const endRow = Math.floor(endIndex / 8);
-      const endColumn = endIndex % 8;
+      const endRow = Math.floor(endIndex / gridSize);
+      const endColumn = endIndex % gridSize;
 
       const rowDifference = endRow - startRow;
       const columnDifference = endColumn - startColumn;
@@ -391,7 +393,7 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
       let currentColumn = startColumn;
 
       while (true) {
-        cells.push(currentRow * 8 + currentColumn);
+        cells.push(currentRow * gridSize + currentColumn);
 
         if (
           currentRow === endRow &&
@@ -516,6 +518,7 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
 
     function renderCompletion() {
       const complete =
+        data.words.length > 0 &&
         foundWords.length === data.words.length;
 
       if (complete) {
@@ -605,9 +608,9 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
           "aria-label",
           phonemeHint +
             ". Row " +
-            (Math.floor(index / 8) + 1) +
+            (Math.floor(index / gridSize) + 1) +
             ", column " +
-            ((index % 8) + 1),
+            ((index % gridSize) + 1),
         );
 
         button.textContent = symbol;
@@ -645,6 +648,9 @@ export function generateWordSearchHtml(options: GenerateWordSearchOptions) {
 </html>`;
 }
 
-export function downloadWordSearchHtml(content: string) {
-  downloadHtml(content, "phoneme-word-search.html");
+export function downloadWordSearchHtml(
+  content: string,
+  filename = "phoneme-word-search.html",
+) {
+  downloadHtml(content, filename);
 }
