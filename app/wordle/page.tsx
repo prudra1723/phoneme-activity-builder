@@ -30,8 +30,8 @@ export default function WordlePage() {
             <div>
               <strong>Assessment 1 scope</strong>
               <p>
-                This version uses one phoneme word. Database-driven word lists
-                will be added in Assessment 2.
+                Load saved phoneme words and activity settings from the backend,
+                preview the result and download a playable classroom activity.
               </p>
             </div>
           </aside>
