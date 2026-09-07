@@ -17,6 +17,10 @@ export const navigationItems = [
     label: "Word Search",
   },
   {
+    href: "/manage",
+    label: "Manage Words",
+  },
+  {
     href: "/about",
     label: "About",
   },
