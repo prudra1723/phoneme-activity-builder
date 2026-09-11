@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn about the Phoneme Activity Builder, its assessment scope and how teachers can use its Wordle and Word Search tools.",
+    "Learn how the full-stack Phoneme Activity Builder uses Next.js, Prisma and PostgreSQL to create classroom activities.",
 };
 
 const projectFeatures = [
@@ -12,7 +12,7 @@ const projectFeatures = [
     symbol: "/θ/",
     title: "Phoneme Wordle",
     description:
-      "Creates a Wordle-style classroom activity using one phoneme-based word, English equivalence hints and configurable guesses.",
+      "Loads a stored Wordle configuration, ordered phoneme answer, difficulty, hints and guess settings from the database.",
     link: "/wordle",
     linkLabel: "Open Wordle builder",
   },
@@ -20,9 +20,17 @@ const projectFeatures = [
     symbol: "⌕",
     title: "Phoneme Word Search",
     description:
-      "Creates an interactive word search using approximately five phoneme-based words and accessible learner feedback.",
+      "Generates a dynamic phoneme grid from a stored word list and supports configurable grid size, hints and difficulty.",
     link: "/word-search",
     linkLabel: "Open Word Search builder",
+  },
+  {
+    symbol: "DB",
+    title: "Manage Words",
+    description:
+      "Allows teachers to create, retrieve, update and delete phoneme words through a validated database workflow.",
+    link: "/manage",
+    linkLabel: "Manage database words",
   },
 ];
 
@@ -34,12 +42,12 @@ export default function AboutPage() {
           <div>
             <p className="eyebrow">About the project</p>
 
-            <h1>Classroom activities with phonemes at the centre</h1>
+            <h1>A full-stack classroom activity builder</h1>
 
             <p>
               The Phoneme Activity Builder helps teachers and Speech Pathology
-              students create, preview and download accessible phoneme-based
-              learning activities.
+              students manage, preview and download accessible phoneme-based
+              activities using content stored in PostgreSQL.
             </p>
           </div>
 
@@ -60,33 +68,34 @@ export default function AboutPage() {
             <p className="eyebrow">Project overview</p>
 
             <h2 id="project-overview-heading">
-              A frontend builder for teachers
+              A database-driven builder for teachers
             </h2>
 
             <p>
-              This project is designed for teachers and Speech Pathology
-              students rather than clients. It provides a clear workflow for
-              configuring an activity, previewing the result and downloading a
-              playable classroom resource.
+              This project extends the Assessment 1 interface with server-side
+              APIs and persistent storage. Teachers can manage ordered phoneme
+              words, retrieve saved activity configurations and use stored data
+              to generate classroom resources.
             </p>
 
             <p>
-              The generated activities download as individual HTML files. Each
-              file contains the required layout, styling and gameplay code, so
-              it can run independently in a normal web browser.
+              Generated activities download as individual HTML files. Each file
+              contains its own layout, styling and gameplay JavaScript, so it
+              can run independently in a normal browser without the original
+              Next.js application.
             </p>
 
             <div className="frontend-scope-notice">
-              <span aria-hidden="true">i</span>
+              <span aria-hidden="true">✓</span>
 
               <div>
-                <h3>Assessment 1 is frontend only</h3>
+                <h3>Assessment 2 backend integration</h3>
 
                 <p>
-                  This assessment focuses on React components, responsive
-                  design, usability, accessibility and standalone HTML output. A
-                  database and rotating word lists will be introduced in
-                  Assessment 2.
+                  Next.js Route Handlers validate requests and use Prisma ORM to
+                  store phonemes, words, word lists and activity settings in
+                  PostgreSQL. The complete application can run with Docker
+                  Compose.
                 </p>
               </div>
             </div>
@@ -112,7 +121,7 @@ export default function AboutPage() {
 
               <div>
                 <dt>Assessment</dt>
-                <dd>Assessment 1</dd>
+                <dd>Assessment 2</dd>
               </div>
 
               <div>
@@ -121,8 +130,13 @@ export default function AboutPage() {
               </div>
 
               <div>
+                <dt>Database</dt>
+                <dd>PostgreSQL and Prisma</dd>
+              </div>
+
+              <div>
                 <dt>Project type</dt>
-                <dd>Frontend builder</dd>
+                <dd>Full-stack application</dd>
               </div>
             </dl>
           </aside>
@@ -135,15 +149,15 @@ export default function AboutPage() {
       >
         <div className="page-container">
           <div className="section-heading">
-            <p className="eyebrow">Activity tools</p>
+            <p className="eyebrow">Teacher tools</p>
 
             <h2 id="activity-tools-heading">
-              Two ways to practise phoneme recognition
+              Manage content and generate activities
             </h2>
 
             <p>
-              Both builders use phoneme symbols as the primary learning content
-              and provide English equivalences as supportive hints.
+              The interface connects teacher controls to reusable backend data
+              while retaining accessible learner feedback.
             </p>
           </div>
 
@@ -169,36 +183,37 @@ export default function AboutPage() {
 
       <section
         className="video-section"
-        aria-labelledby="instruction-video-heading"
+        aria-labelledby="backend-workflow-heading"
       >
         <div className="page-container video-layout">
           <div className="video-introduction">
-            <p className="eyebrow">Website demonstration</p>
+            <p className="eyebrow">Backend workflow</p>
 
-            <h2 id="instruction-video-heading">How to use the builder</h2>
+            <h2 id="backend-workflow-heading">
+              How stored content becomes an activity
+            </h2>
 
             <p>
-              This short video demonstrates the website navigation, Wordle and
-              Word Search configuration, live previews, accessibility options,
-              theme settings and standalone HTML downloads.
+              A clear data flow connects the teacher interface, backend routes,
+              PostgreSQL records and standalone activity generators.
             </p>
 
             <ul className="video-topic-list">
               <li>
-                <span aria-hidden="true">1</span>
-                Navigate between activity builders
+                <span aria-hidden="true">1</span>A teacher creates or updates a
+                phoneme word
               </li>
               <li>
                 <span aria-hidden="true">2</span>
-                Configure phoneme words and hints
+                The API validates the request and calls Prisma
               </li>
               <li>
                 <span aria-hidden="true">3</span>
-                Preview and test an activity
+                PostgreSQL stores the word and ordered phonemes
               </li>
               <li>
-                <span aria-hidden="true">4</span>
-                Generate the playable HTML file
+                <span aria-hidden="true">4</span>A builder loads stored data and
+                generates playable HTML
               </li>
             </ul>
           </div>
@@ -206,55 +221,35 @@ export default function AboutPage() {
           <div className="video-card">
             <div className="video-card-heading">
               <div>
-                <p>Demonstration video</p>
-                <span>Presented by Rudra Pandey</span>
+                <p>Full-stack architecture</p>
+                <span>Next.js, Prisma, PostgreSQL and Docker</span>
               </div>
 
-              <span className="video-duration">9:35</span>
+              <span className="video-duration">Assessment 2</span>
             </div>
 
-            <video
-              className="instruction-video"
-              controls
-              preload="metadata"
-              playsInline
-              aria-label="Video explaining how to use the Phoneme Activity Builder"
-            >
-              <source src="/videos/assessment-1-compressed.mp4" type="video/mp4" />
-              Your browser does not support HTML video. A written guide is
-              provided below.
-            </video>
-
-            <details className="video-transcript">
-              <summary>Read the video guide</summary>
-
+            <div className="backend-flow-card">
               <ol>
                 <li>
-                  Use the navigation bar or hamburger menu to open an activity
-                  builder.
+                  <strong>React interface</strong>
+                  <span>Collects teacher input and displays stored data.</span>
                 </li>
                 <li>
-                  In Wordle, choose one phoneme word, its English equivalent,
-                  the number of guesses and whether hints are displayed.
+                  <strong>Next.js Route Handlers</strong>
+                  <span>
+                    Validate requests and return clear HTTP responses.
+                  </span>
                 </li>
                 <li>
-                  In Word Search, review the five phoneme words and configure
-                  the available activity options.
+                  <strong>Prisma and PostgreSQL</strong>
+                  <span>Persist related words, phonemes and settings.</span>
                 </li>
                 <li>
-                  Use the live preview to check the activity and test its
-                  interaction.
-                </li>
-                <li>
-                  Select Generate HTML to download one playable file that can
-                  open in a normal browser.
-                </li>
-                <li>
-                  Visit Settings to select a light or dark theme and preferred
-                  layout spacing.
+                  <strong>HTML generators</strong>
+                  <span>Create portable Wordle and Word Search files.</span>
                 </li>
               </ol>
-            </details>
+            </div>
           </div>
         </div>
       </section>
@@ -265,29 +260,29 @@ export default function AboutPage() {
       >
         <div className="page-container">
           <div className="section-heading">
-            <p className="eyebrow">Frontend approach</p>
+            <p className="eyebrow">Technical approach</p>
 
             <h2 id="design-principles-heading">
-              Designed for usability and expansion
+              Designed for reliability and expansion
             </h2>
           </div>
 
           <div className="design-principles-grid">
             <article>
-              <span aria-hidden="true">◫</span>
-              <h3>Reusable components</h3>
+              <span aria-hidden="true">DB</span>
+              <h3>Normalised schema</h3>
               <p>
-                Shared navigation, buttons, previews and activity controls
-                reduce duplication and support future development.
+                Related models preserve phoneme order and support reusable word
+                lists and multiple activity configurations.
               </p>
             </article>
 
             <article>
-              <span aria-hidden="true">↔</span>
-              <h3>Responsive layout</h3>
+              <span aria-hidden="true">API</span>
+              <h3>Validated APIs</h3>
               <p>
-                Pages adjust for desktop, tablet and mobile screens without
-                removing essential controls or information.
+                Route Handlers provide CRUD operations, clear status codes and
+                graceful error responses.
               </p>
             </article>
 
@@ -296,16 +291,16 @@ export default function AboutPage() {
               <h3>Accessible interaction</h3>
               <p>
                 Semantic elements, keyboard controls, focus indicators, labels
-                and text feedback support a wider range of users.
+                and status feedback support a wider range of users.
               </p>
             </article>
 
             <article>
-              <span aria-hidden="true">＋</span>
-              <h3>Future scalability</h3>
+              <span aria-hidden="true">◇</span>
+              <h3>Reproducible execution</h3>
               <p>
-                Activity data and HTML generation are separated from page
-                layouts, preparing the project for database integration.
+                Docker Compose runs the application and PostgreSQL with health
+                checks, migrations and persistent storage.
               </p>
             </article>
           </div>
@@ -321,12 +316,24 @@ export default function AboutPage() {
             <p className="eyebrow">Research and guidance</p>
             <h2 id="references-heading">References</h2>
             <p>
-              Academic and industry sources used to guide the project&apos;s
-              component structure, accessibility and phoneme-based design.
+              Industry and standards sources used to guide the full-stack,
+              database, accessibility and phoneme-based implementation.
             </p>
           </div>
 
           <ol className="reference-list">
+            <li>
+              Docker, Inc. (n.d.).{" "}
+              <cite>Control startup and shutdown order in Compose</cite>.{" "}
+              <a
+                href="https://docs.docker.com/compose/how-tos/startup-order/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://docs.docker.com/compose/how-tos/startup-order/
+              </a>
+            </li>
+
             <li>
               International Phonetic Association. (n.d.).{" "}
               <cite>The International Phonetic Alphabet and the IPA chart</cite>
@@ -353,31 +360,41 @@ export default function AboutPage() {
             </li>
 
             <li>
-              Mozilla. (2026, May 20).{" "}
-              <cite>HTML: A good basis for accessibility</cite>. MDN Web Docs.{" "}
+              PostgreSQL Global Development Group. (2026).{" "}
+              <cite>PostgreSQL 17 documentation</cite>.{" "}
               <a
-                href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML"
+                href="https://www.postgresql.org/docs/17/"
                 target="_blank"
                 rel="noreferrer"
               >
-                https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML
+                https://www.postgresql.org/docs/17/
               </a>
             </li>
 
             <li>
-              Vercel. (n.d.). <cite>Next.js documentation: App Router</cite>.
-              Next.js.{" "}
+              Prisma Data, Inc. (n.d.). <cite>Prisma ORM documentation</cite>.{" "}
               <a
-                href="https://nextjs.org/docs/app"
+                href="https://www.prisma.io/docs/orm/v7"
                 target="_blank"
                 rel="noreferrer"
               >
-                https://nextjs.org/docs/app
+                https://www.prisma.io/docs/orm/v7
               </a>
             </li>
 
             <li>
-              World Wide Web Consortium. (2024, December 12).{" "}
+              Vercel. (2026). <cite>Route Handlers</cite>. Next.js.{" "}
+              <a
+                href="https://nextjs.org/docs/app/getting-started/route-handlers"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://nextjs.org/docs/app/getting-started/route-handlers
+              </a>
+            </li>
+
+            <li>
+              World Wide Web Consortium. (2024).{" "}
               <cite>Web Content Accessibility Guidelines (WCAG) 2.2</cite>.{" "}
               <a
                 href="https://www.w3.org/TR/WCAG22/"
