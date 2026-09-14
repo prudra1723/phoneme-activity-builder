@@ -18,6 +18,15 @@ enum Difficulty {
   HARD
 }
 
+enum UsageEventType {
+  ACTIVITY_CREATED
+  GENERATION_SUCCESS
+  GENERATION_FAILED
+  PAGE_VIEW
+  PAGE_DURATION
+  VALIDATION_WARNING
+}
+
 model Phoneme {
   id        String        @id @default(cuid())
   symbol    String        @unique @db.VarChar(16)
@@ -90,8 +99,27 @@ model Activity {
   updatedAt      DateTime     @updatedAt
   wordList       WordList     @relation(fields: [wordListId], references: [id], onDelete: Cascade)
   answerWord     Word?        @relation("WordleAnswer", fields: [answerWordId], references: [id], onDelete: SetNull)
+  usageEvents    UsageEvent[]
 
   @@index([wordListId])
   @@index([answerWordId])
   @@index([type])
+}
+
+model UsageEvent {
+  id           String         @id @default(cuid())
+  eventType    UsageEventType
+  activityType ActivityType?
+  pagePath     String?        @db.VarChar(255)
+  durationMs   Int?
+  message      String?        @db.VarChar(500)
+  metadata     Json?
+  activityId   String?
+  createdAt    DateTime       @default(now())
+  activity     Activity?      @relation(fields: [activityId], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([activityType])
+  @@index([activityId])
+  @@index([createdAt])
 }
