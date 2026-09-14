@@ -9,6 +9,10 @@ export const navigationItems = [
     label: "Home",
   },
   {
+    href: "/dashboard",
+    label: "Dashboard",
+  },
+  {
     href: "/wordle",
     label: "Wordle",
   },
