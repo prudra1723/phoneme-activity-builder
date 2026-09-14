@@ -37,11 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     const body: unknown = await request.json();
 
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      Array.isArray(body)
-    ) {
+    if (typeof body !== "object" || body === null || Array.isArray(body)) {
       return NextResponse.json(
         { error: "Request body must be a JSON object" },
         { status: 400 },
@@ -56,8 +52,7 @@ export async function POST(request: NextRequest) {
     const phonetic =
       typeof input.phonetic === "string" ? input.phonetic.trim() : "";
 
-    const hint =
-      typeof input.hint === "string" ? input.hint.trim() : null;
+    const hint = typeof input.hint === "string" ? input.hint.trim() : null;
 
     const phonemeIds = input.phonemeIds;
     const errors: string[] = [];
@@ -110,9 +105,7 @@ export async function POST(request: NextRequest) {
         existingPhonemes.map((phoneme) => phoneme.id),
       );
 
-      const missingIds = uniquePhonemeIds.filter(
-        (id) => !existingIds.has(id),
-      );
+      const missingIds = uniquePhonemeIds.filter((id) => !existingIds.has(id));
 
       return NextResponse.json(
         {
