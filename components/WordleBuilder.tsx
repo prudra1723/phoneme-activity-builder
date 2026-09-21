@@ -183,7 +183,7 @@ export default function WordleBuilder() {
     }
   };
 
-  const generate = () => {
+  const generate = async () => {
     const eventContext = {
       activityType: "WORDLE" as const,
       pagePath: "/wordle",
@@ -199,7 +199,7 @@ export default function WordleBuilder() {
 
       setActivityMessage(message);
 
-      void recordUsageEvent({
+      await recordUsageEvent({
         ...eventContext,
         eventType: "VALIDATION_WARNING",
         message,
@@ -224,7 +224,7 @@ export default function WordleBuilder() {
 
       setActivityMessage("Playable HTML created. Download initiated.");
 
-      void recordUsageEvent({
+      await recordUsageEvent({
         ...eventContext,
         eventType: "GENERATION_SUCCESS",
         message: "Wordle HTML created and download initiated",
@@ -247,7 +247,7 @@ export default function WordleBuilder() {
 
       setActivityMessage(message);
 
-      void recordUsageEvent({
+      await recordUsageEvent({
         ...eventContext,
         eventType: "GENERATION_FAILED",
         message: message.slice(0, 500),
