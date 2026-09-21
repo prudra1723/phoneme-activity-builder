@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PageUsageTracker from "@/components/PageUsageTracker";
 import PhonemeButton from "@/components/PhonemeButton";
 import WordlePreview from "@/components/WordlePreview";
 import { DEFAULT_WORDLE_WORD, PHONEMES, getPhonemeHint } from "@/lib/phonemes";
 import { downloadHtml, generateWordleHtml } from "@/lib/generateWordleHtml";
+import { recordUsageEvent } from "@/lib/usageEvents";
+
+type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 type SavedActivitySummary = {
   id: string;
@@ -16,7 +20,7 @@ type SavedWordleActivity = {
   id: string;
   title: string;
   type: "WORDLE";
-  difficulty: "EASY" | "MEDIUM" | "HARD";
+  difficulty: Difficulty;
   showHints: boolean;
   maxGuesses: number | null;
   outputFilename: string | null;
@@ -37,20 +41,30 @@ function normalisePhonemeSymbol(symbol: string) {
 
 export default function WordleBuilder() {
   const [title, setTitle] = useState("Phoneme Wordle");
+
   const [answer, setAnswer] = useState<string[]>(DEFAULT_WORDLE_WORD.tokens);
+
   const [english, setEnglish] = useState(DEFAULT_WORDLE_WORD.english);
+
   const [maxGuesses, setMaxGuesses] = useState(5);
   const [showHints, setShowHints] = useState(true);
-  const [difficulty, setDifficulty] = useState<"EASY" | "MEDIUM" | "HARD">(
-    "EASY",
-  );
+
+  const [difficulty, setDifficulty] = useState<Difficulty>("EASY");
+
   const [outputFilename, setOutputFilename] = useState("phoneme-wordle.html");
 
   const [savedActivities, setSavedActivities] = useState<
     SavedActivitySummary[]
   >([]);
+
   const [selectedActivityId, setSelectedActivityId] = useState("");
+
+  const [loadedActivityId, setLoadedActivityId] = useState("");
+
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+
+  const [isLoadingSavedActivity, setIsLoadingSavedActivity] = useState(false);
+
   const [activityMessage, setActivityMessage] = useState("");
 
   useEffect(() => {
@@ -58,7 +72,9 @@ export default function WordleBuilder() {
 
     async function retrieveActivities() {
       try {
-        const response = await fetch("/api/activities");
+        const response = await fetch("/api/activities", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error("Unable to retrieve saved activities");
@@ -86,7 +102,7 @@ export default function WordleBuilder() {
       }
     }
 
-    retrieveActivities();
+    void retrieveActivities();
 
     return () => {
       cancelled = true;
@@ -94,15 +110,17 @@ export default function WordleBuilder() {
   }, []);
 
   const loadSavedActivity = async () => {
-    if (!selectedActivityId) {
-      setActivityMessage("Select a saved Wordle activity first.");
+    if (!selectedActivityId || isLoadingSavedActivity) {
       return;
     }
 
+    setIsLoadingSavedActivity(true);
     setActivityMessage("Loading saved activity...");
 
     try {
-      const response = await fetch(`/api/activities/${selectedActivityId}`);
+      const response = await fetch(`/api/activities/${selectedActivityId}`, {
+        cache: "no-store",
+      });
 
       const result = (await response.json()) as {
         data?: SavedWordleActivity;
@@ -125,50 +143,128 @@ export default function WordleBuilder() {
         .sort((first, second) => first.position - second.position)
         .map((item) => normalisePhonemeSymbol(item.phoneme.symbol));
 
-      if (tokens.length === 0) {
-        throw new Error("The saved answer does not contain phoneme data.");
+      if (tokens.length === 0 || tokens.some((token) => !token.trim())) {
+        throw new Error(
+          "The saved answer does not contain valid phoneme data.",
+        );
       }
 
+      setLoadedActivityId(activity.id);
       setTitle(activity.title);
       setAnswer(tokens);
       setEnglish(activity.answerWord.english);
       setMaxGuesses(activity.maxGuesses ?? 5);
       setShowHints(activity.showHints);
       setDifficulty(activity.difficulty);
+
       setOutputFilename(activity.outputFilename || "phoneme-wordle.html");
+
       setActivityMessage(`Loaded "${activity.title}" from the database.`);
     } catch (error) {
-      setActivityMessage(
+      const message =
         error instanceof Error
           ? error.message
-          : "Unable to load the selected activity",
-      );
+          : "Unable to load the selected activity.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        eventType: "VALIDATION_WARNING",
+        activityType: "WORDLE",
+        pagePath: "/wordle",
+        message: message.slice(0, 500),
+        metadata: {
+          operation: "load saved activity",
+          selectedActivityId,
+        },
+      });
+    } finally {
+      setIsLoadingSavedActivity(false);
     }
   };
 
   const generate = () => {
-    if (!answer.length || !english.trim()) return;
+    const eventContext = {
+      activityType: "WORDLE" as const,
+      pagePath: "/wordle",
+      ...(loadedActivityId ? { activityId: loadedActivityId } : {}),
+    };
 
-    downloadHtml(
-      generateWordleHtml({
+    if (
+      answer.length === 0 ||
+      answer.some((symbol) => !symbol.trim()) ||
+      !english.trim()
+    ) {
+      const message = "Choose phonemes and enter an English equivalence.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "VALIDATION_WARNING",
+        message,
+      });
+
+      return;
+    }
+
+    try {
+      const filename = outputFilename.trim() || "phoneme-wordle.html";
+
+      const content = generateWordleHtml({
         title: title.trim() || "Phoneme Wordle",
         answer,
         english: english.trim(),
         maxGuesses,
         showHints,
         hints: answer.map(getPhonemeHint),
-      }),
-      outputFilename.trim() || "phoneme-wordle.html",
-    );
+      });
+
+      downloadHtml(content, filename);
+
+      setActivityMessage("Playable HTML created. Download initiated.");
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "GENERATION_SUCCESS",
+        message: "Wordle HTML created and download initiated",
+        metadata: {
+          filename,
+          difficulty,
+          maxGuesses,
+          showHints,
+          phonemeCount: answer.length,
+          source: loadedActivityId
+            ? "saved activity"
+            : "frontend configuration",
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to generate Wordle HTML.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "GENERATION_FAILED",
+        message: message.slice(0, 500),
+      });
+    }
   };
 
   return (
     <div className="builder-workspace">
+      <PageUsageTracker pagePath="/wordle" activityType="WORDLE" />
+
       <section
         className="builder-panel"
         aria-labelledby="wordle-settings-title"
       >
         <p className="eyebrow">Activity settings</p>
+
         <h2 id="wordle-settings-title">Configure Wordle</h2>
 
         <div className="form-field">
@@ -177,9 +273,10 @@ export default function WordleBuilder() {
           <select
             id="saved-wordle"
             value={selectedActivityId}
-            disabled={isLoadingActivities}
+            disabled={isLoadingActivities || isLoadingSavedActivity}
             onChange={(event) => {
               setSelectedActivityId(event.target.value);
+
               setActivityMessage("");
             }}
           >
@@ -199,10 +296,14 @@ export default function WordleBuilder() {
           <button
             type="button"
             className="small-button"
-            disabled={!selectedActivityId || isLoadingActivities}
-            onClick={loadSavedActivity}
+            disabled={
+              !selectedActivityId ||
+              isLoadingActivities ||
+              isLoadingSavedActivity
+            }
+            onClick={() => void loadSavedActivity()}
           >
-            Load saved activity
+            {isLoadingSavedActivity ? "Loading..." : "Load saved activity"}
           </button>
 
           {activityMessage && (
@@ -214,6 +315,7 @@ export default function WordleBuilder() {
 
         <div className="form-field">
           <label htmlFor="wordle-title">Activity title</label>
+
           <input
             id="wordle-title"
             value={title}
@@ -269,7 +371,7 @@ export default function WordleBuilder() {
             id="difficulty"
             value={difficulty}
             onChange={(event) =>
-              setDifficulty(event.target.value as "EASY" | "MEDIUM" | "HARD")
+              setDifficulty(event.target.value as Difficulty)
             }
           >
             <option value="EASY">Easy</option>
@@ -287,7 +389,9 @@ export default function WordleBuilder() {
             onChange={(event) => setMaxGuesses(Number(event.target.value))}
           >
             {[3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
-              <option key={count}>{count}</option>
+              <option key={count} value={count}>
+                {count}
+              </option>
             ))}
           </select>
         </div>
@@ -311,6 +415,7 @@ export default function WordleBuilder() {
 
           <span>
             <strong>Show phoneme hints</strong>
+
             <small>Display phonetic-to-English equivalences.</small>
           </span>
         </label>
@@ -318,7 +423,7 @@ export default function WordleBuilder() {
         <button
           type="button"
           className="button button-primary generate-button"
-          disabled={!answer.length || !english.trim()}
+          disabled={!answer.length || !english.trim() || isLoadingSavedActivity}
           onClick={generate}
         >
           Download playable HTML
@@ -327,7 +432,7 @@ export default function WordleBuilder() {
 
       <section className="preview-panel">
         <WordlePreview
-          key={`${answer.join("")}-${maxGuesses}`}
+          key={`${loadedActivityId}-${answer.join("")}-${maxGuesses}`}
           title={title || "Phoneme Wordle"}
           answer={answer}
           english={english || "answer"}

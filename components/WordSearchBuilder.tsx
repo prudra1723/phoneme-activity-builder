@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import WordSearchPreview from "@/components/WordSearchPreview";
+import PageUsageTracker from "@/components/PageUsageTracker";
 import {
   getPhonemeHint,
   WORD_SEARCH_GRID,
@@ -13,6 +14,7 @@ import {
   downloadWordSearchHtml,
   generateWordSearchHtml,
 } from "@/lib/generateWordSearchHtml";
+import { recordUsageEvent } from "@/lib/usageEvents";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
@@ -67,17 +69,23 @@ export default function WordSearchBuilder() {
   const [showHints, setShowHints] = useState(true);
   const [difficulty, setDifficulty] = useState<Difficulty>("EASY");
   const [gridSize, setGridSize] = useState(8);
+
   const [outputFilename, setOutputFilename] = useState(
     "phoneme-word-search.html",
   );
+
   const [grid, setGrid] = useState<string[]>(WORD_SEARCH_GRID);
   const [words, setWords] = useState<PhonemeWord[]>(WORD_SEARCH_WORDS);
 
   const [savedActivities, setSavedActivities] = useState<
     SavedActivitySummary[]
   >([]);
+
   const [selectedActivityId, setSelectedActivityId] = useState("");
+  const [loadedActivityId, setLoadedActivityId] = useState("");
+  const [loadedWordListName, setLoadedWordListName] = useState("");
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [isLoadingSavedActivity, setIsLoadingSavedActivity] = useState(false);
   const [activityMessage, setActivityMessage] = useState("");
 
   useEffect(() => {
@@ -85,7 +93,9 @@ export default function WordSearchBuilder() {
 
     async function retrieveActivities() {
       try {
-        const response = await fetch("/api/activities");
+        const response = await fetch("/api/activities", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error("Unable to retrieve saved activities");
@@ -113,7 +123,7 @@ export default function WordSearchBuilder() {
       }
     }
 
-    retrieveActivities();
+    void retrieveActivities();
 
     return () => {
       cancelled = true;
@@ -121,15 +131,17 @@ export default function WordSearchBuilder() {
   }, []);
 
   const loadSavedActivity = async () => {
-    if (!selectedActivityId) {
-      setActivityMessage("Select a saved Word Search activity first.");
+    if (!selectedActivityId || isLoadingSavedActivity) {
       return;
     }
 
+    setIsLoadingSavedActivity(true);
     setActivityMessage("Loading saved activity...");
 
     try {
-      const response = await fetch(`/api/activities/${selectedActivityId}`);
+      const response = await fetch(`/api/activities/${selectedActivityId}`, {
+        cache: "no-store",
+      });
 
       const result = (await response.json()) as {
         data?: SavedWordSearchActivity;
@@ -167,29 +179,56 @@ export default function WordSearchBuilder() {
         throw new Error("The saved word list does not contain any words.");
       }
 
-      if (databaseWords.some((word) => word.tokens.length === 0)) {
-        throw new Error("One or more saved words have no phoneme data.");
+      if (
+        databaseWords.some((word) =>
+          word.tokens.some((token) => !token.trim()),
+        ) ||
+        databaseWords.some((word) => word.tokens.length === 0)
+      ) {
+        throw new Error(
+          "One or more saved words contain missing phoneme data.",
+        );
       }
 
       const savedGridSize = activity.gridSize ?? 8;
+
       const generatedSearch = createWordSearch(databaseWords, savedGridSize);
 
+      setLoadedActivityId(activity.id);
+      setLoadedWordListName(activity.wordList.name);
       setTitle(activity.title);
       setShowHints(activity.showHints);
       setDifficulty(activity.difficulty);
       setGridSize(savedGridSize);
+
       setOutputFilename(activity.outputFilename || "phoneme-word-search.html");
+
       setGrid(generatedSearch.grid);
       setWords(generatedSearch.words);
+
       setActivityMessage(
         `Loaded "${activity.title}" from the database using "${activity.wordList.name}".`,
       );
     } catch (error) {
-      setActivityMessage(
+      const message =
         error instanceof Error
           ? error.message
-          : "Unable to load the selected activity",
-      );
+          : "Unable to load the selected activity.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        eventType: "VALIDATION_WARNING",
+        activityType: "WORD_SEARCH",
+        pagePath: "/word-search",
+        message: message.slice(0, 500),
+        metadata: {
+          operation: "load saved activity",
+          selectedActivityId,
+        },
+      });
+    } finally {
+      setIsLoadingSavedActivity(false);
     }
   };
 
@@ -205,39 +244,109 @@ export default function WordSearchBuilder() {
       setWords(generatedSearch.words);
       setActivityMessage("");
     } catch (error) {
-      setActivityMessage(
-        error instanceof Error ? error.message : "Unable to resize the grid.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Unable to resize the grid.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        eventType: "VALIDATION_WARNING",
+        activityType: "WORD_SEARCH",
+        pagePath: "/word-search",
+        ...(loadedActivityId ? { activityId: loadedActivityId } : {}),
+        message: message.slice(0, 500),
+        metadata: {
+          operation: "resize grid",
+          requestedGridSize: nextGridSize,
+        },
+      });
     }
   };
 
   const generate = () => {
-    if (words.length === 0 || grid.length !== gridSize * gridSize) {
-      setActivityMessage(
-        "Load a valid Word Search activity before downloading.",
-      );
+    const eventContext = {
+      activityType: "WORD_SEARCH" as const,
+      pagePath: "/word-search",
+      ...(loadedActivityId ? { activityId: loadedActivityId } : {}),
+    };
+
+    if (
+      words.length === 0 ||
+      words.some(
+        (word) =>
+          word.tokens.length === 0 ||
+          word.tokens.some((token) => !token.trim()),
+      ) ||
+      grid.length !== gridSize * gridSize
+    ) {
+      const message = "Load a valid Word Search activity before downloading.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "VALIDATION_WARNING",
+        message,
+      });
+
       return;
     }
 
-    const hints = Object.fromEntries(
-      [...new Set(grid)].map((symbol) => [symbol, getPhonemeHint(symbol)]),
-    );
+    try {
+      const filename = outputFilename.trim() || "phoneme-word-search.html";
 
-    downloadWordSearchHtml(
-      generateWordSearchHtml({
+      const hints = Object.fromEntries(
+        [...new Set(grid)].map((symbol) => [symbol, getPhonemeHint(symbol)]),
+      );
+
+      const content = generateWordSearchHtml({
         title: title.trim() || "Phoneme Word Search",
         grid,
         gridSize,
         words,
         showHints,
         hints,
-      }),
-      outputFilename.trim() || "phoneme-word-search.html",
-    );
+      });
+
+      downloadWordSearchHtml(content, filename);
+
+      setActivityMessage("Playable HTML created. Download initiated.");
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "GENERATION_SUCCESS",
+        message: "Word Search HTML created and download initiated",
+        metadata: {
+          filename,
+          difficulty,
+          gridSize,
+          showHints,
+          wordCount: words.length,
+          source: loadedActivityId
+            ? "saved activity"
+            : "frontend configuration",
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to generate Word Search HTML.";
+
+      setActivityMessage(message);
+
+      void recordUsageEvent({
+        ...eventContext,
+        eventType: "GENERATION_FAILED",
+        message: message.slice(0, 500),
+      });
+    }
   };
 
   return (
     <div className="builder-workspace">
+      <PageUsageTracker pagePath="/word-search" activityType="WORD_SEARCH" />
+
       <section
         className="builder-panel"
         aria-labelledby="search-settings-title"
@@ -253,7 +362,7 @@ export default function WordSearchBuilder() {
           <select
             id="saved-word-search"
             value={selectedActivityId}
-            disabled={isLoadingActivities}
+            disabled={isLoadingActivities || isLoadingSavedActivity}
             onChange={(event) => {
               setSelectedActivityId(event.target.value);
               setActivityMessage("");
@@ -275,10 +384,14 @@ export default function WordSearchBuilder() {
           <button
             type="button"
             className="small-button"
-            disabled={!selectedActivityId || isLoadingActivities}
-            onClick={loadSavedActivity}
+            disabled={
+              !selectedActivityId ||
+              isLoadingActivities ||
+              isLoadingSavedActivity
+            }
+            onClick={() => void loadSavedActivity()}
           >
-            Load saved activity
+            {isLoadingSavedActivity ? "Loading..." : "Load saved activity"}
           </button>
 
           {activityMessage && (
@@ -290,6 +403,7 @@ export default function WordSearchBuilder() {
 
         <div className="form-field">
           <label htmlFor="search-title">Activity title</label>
+
           <input
             id="search-title"
             value={title}
@@ -299,6 +413,7 @@ export default function WordSearchBuilder() {
 
         <div className="form-field">
           <label htmlFor="search-difficulty">Difficulty</label>
+
           <select
             id="search-difficulty"
             value={difficulty}
@@ -314,6 +429,7 @@ export default function WordSearchBuilder() {
 
         <div className="form-field">
           <label htmlFor="search-grid-size">Grid size</label>
+
           <select
             id="search-grid-size"
             value={gridSize}
@@ -329,6 +445,7 @@ export default function WordSearchBuilder() {
 
         <div className="form-field">
           <label htmlFor="search-output-filename">Download filename</label>
+
           <input
             id="search-output-filename"
             value={outputFilename}
@@ -337,10 +454,18 @@ export default function WordSearchBuilder() {
         </div>
 
         <div className="fixed-word-list">
-          <h3>Current database word list</h3>
+          <h3>
+            {loadedActivityId
+              ? "Loaded database word list"
+              : "Example word list"}
+          </h3>
+
           <p>
-            These {words.length} words drive the preview and downloaded HTML.
+            {loadedActivityId
+              ? `"${loadedWordListName}" provides these ${words.length} words.`
+              : "Load a saved activity to use database content. These example words are available for preview."}
           </p>
+
           <ul>
             {words.map((word) => (
               <li key={word.id}>
@@ -357,6 +482,7 @@ export default function WordSearchBuilder() {
             checked={showHints}
             onChange={(event) => setShowHints(event.target.checked)}
           />
+
           <span>
             <strong>Show English hints</strong>
             <small>Display the English equivalence beside each target.</small>
@@ -366,7 +492,7 @@ export default function WordSearchBuilder() {
         <button
           type="button"
           className="button button-primary generate-button"
-          disabled={words.length === 0}
+          disabled={words.length === 0 || isLoadingSavedActivity}
           onClick={generate}
         >
           Download playable HTML
@@ -375,7 +501,7 @@ export default function WordSearchBuilder() {
 
       <section className="preview-panel">
         <WordSearchPreview
-          key={`${selectedActivityId}-${gridSize}-${grid.join("|")}`}
+          key={`${loadedActivityId}-${gridSize}-${grid.join("|")}`}
           title={title || "Phoneme Word Search"}
           grid={grid}
           words={words}

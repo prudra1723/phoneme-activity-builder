@@ -46,6 +46,23 @@ type DashboardData = {
   recentEvents: RecentEvent[];
 };
 
+async function requestDashboard(): Promise<DashboardData> {
+  const response = await fetch("/api/dashboard", {
+    cache: "no-store",
+  });
+
+  const result = (await response.json()) as {
+    data?: DashboardData;
+    error?: string;
+  };
+
+  if (!response.ok || !result.data) {
+    throw new Error(result.error || "Unable to load dashboard");
+  }
+
+  return result.data;
+}
+
 function readableLabel(value: string) {
   return value
     .toLowerCase()
@@ -63,7 +80,14 @@ function formatDuration(milliseconds: number) {
     return `${milliseconds} ms`;
   }
 
-  return `${(milliseconds / 1000).toFixed(1)} sec`;
+  if (milliseconds < 60_000) {
+    return `${(milliseconds / 1000).toFixed(1)} sec`;
+  }
+
+  const minutes = Math.floor(milliseconds / 60_000);
+  const seconds = Math.round((milliseconds % 60_000) / 1000);
+
+  return `${minutes} min ${seconds} sec`;
 }
 
 function formatDate(value: string) {
@@ -75,6 +99,7 @@ function formatDate(value: string) {
 
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -83,17 +108,8 @@ export default function Dashboard() {
     setError("");
 
     try {
-      const response = await fetch("/api/dashboard", {
-        cache: "no-store",
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Unable to load dashboard");
-      }
-
-      setDashboard(result.data);
+      const data = await requestDashboard();
+      setDashboard(data);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -106,8 +122,33 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+    let cancelled = false;
+
+    void requestDashboard()
+      .then((data) => {
+        if (!cancelled) {
+          setDashboard(data);
+        }
+      })
+      .catch((loadError: unknown) => {
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load dashboard",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -121,7 +162,9 @@ export default function Dashboard() {
     return (
       <div className="dashboard-state dashboard-error" role="alert">
         <h2>Dashboard unavailable</h2>
+
         <p>{error || "Dashboard data could not be loaded."}</p>
+
         <button
           type="button"
           className="button button-primary"
@@ -185,6 +228,7 @@ export default function Dashboard() {
         <div>
           <p className="eyebrow">Live system status</p>
           <h2>Application overview</h2>
+
           <p>Updated {formatDate(dashboard.health.generatedAt)}</p>
         </div>
 
@@ -201,9 +245,10 @@ export default function Dashboard() {
           <button
             type="button"
             className="button button-secondary"
+            disabled={loading}
             onClick={() => void loadDashboard()}
           >
-            Refresh data
+            {loading ? "Refreshing…" : "Refresh data"}
           </button>
         </div>
       </div>
@@ -241,6 +286,7 @@ export default function Dashboard() {
             <div className="usage-chart-row">
               <div>
                 <strong>Wordle</strong>
+
                 <span>{dashboard.usage.wordleGenerations} generations</span>
               </div>
 
@@ -252,7 +298,11 @@ export default function Dashboard() {
                 aria-valuemax={100}
                 aria-valuenow={wordlePercentage}
               >
-                <span style={{ width: `${wordlePercentage}%` }} />
+                <span
+                  style={{
+                    width: `${wordlePercentage}%`,
+                  }}
+                />
               </div>
 
               <strong>{wordlePercentage}%</strong>
@@ -261,6 +311,7 @@ export default function Dashboard() {
             <div className="usage-chart-row word-search">
               <div>
                 <strong>Word Search</strong>
+
                 <span>{dashboard.usage.wordSearchGenerations} generations</span>
               </div>
 
@@ -272,7 +323,11 @@ export default function Dashboard() {
                 aria-valuemax={100}
                 aria-valuenow={wordSearchPercentage}
               >
-                <span style={{ width: `${wordSearchPercentage}%` }} />
+                <span
+                  style={{
+                    width: `${wordSearchPercentage}%`,
+                  }}
+                />
               </div>
 
               <strong>{wordSearchPercentage}%</strong>
@@ -287,6 +342,7 @@ export default function Dashboard() {
 
             <div>
               <dt>Average time on page</dt>
+
               <dd>{formatDuration(dashboard.usage.averageTimeOnPageMs)}</dd>
             </div>
           </dl>
@@ -296,15 +352,22 @@ export default function Dashboard() {
           <div className="report-card-heading">
             <div>
               <p className="eyebrow">Operational monitoring</p>
+
               <h2 id="alerts-heading">Alerts and warnings</h2>
             </div>
 
-            <span className="alert-count">{dashboard.alerts.length}</span>
+            <span
+              className="alert-count"
+              aria-label={`${dashboard.alerts.length} active alerts`}
+            >
+              {dashboard.alerts.length}
+            </span>
           </div>
 
           {dashboard.alerts.length === 0 ? (
             <div className="empty-report">
               <strong>No current alerts</strong>
+
               <p>The application has not detected unusual conditions.</p>
             </div>
           ) : (
@@ -315,6 +378,7 @@ export default function Dashboard() {
                   key={`${alert.message}-${index}`}
                 >
                   <strong>{readableLabel(alert.severity)}</strong>
+
                   <p>{alert.message}</p>
 
                   {alert.items && (
@@ -340,6 +404,7 @@ export default function Dashboard() {
         {dashboard.recentEvents.length === 0 ? (
           <div className="empty-report">
             <strong>No events recorded</strong>
+
             <p>Usage events will appear after teachers use the builders.</p>
           </div>
         ) : (
@@ -365,18 +430,22 @@ export default function Dashboard() {
                         {readableLabel(event.eventType)}
                       </span>
                     </td>
+
                     <td>
                       {event.activityType
                         ? readableLabel(event.activityType)
                         : "General"}
                     </td>
+
                     <td>{event.pagePath || "—"}</td>
+
                     <td>
                       {event.message ||
                         (event.durationMs !== null
                           ? formatDuration(event.durationMs)
                           : "—")}
                     </td>
+
                     <td>{formatDate(event.createdAt)}</td>
                   </tr>
                 ))}
