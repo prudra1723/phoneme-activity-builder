@@ -158,6 +158,7 @@ export default function WordlePreview({
 
                 return (
                   <span
+                    role="img"
                     key={columnIndex}
                     className={`wordle-tile ${mark ?? ""}`}
                     aria-label={

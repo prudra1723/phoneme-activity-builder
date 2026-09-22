@@ -6,7 +6,7 @@ Designed for teachers and Speech Pathology students, the application stores teac
 
 ## Assessment information
 
-- **Assessment:** Assessment 3 – Dashboard, Analytics and Application Testing
+- **Assessment:** Assessment 3 – Data-driven Web Application and Reporting
 - **Student:** Rudra Pandey
 - **Student number:** 22455439
 - **Framework:** Next.js, React and TypeScript
@@ -566,6 +566,26 @@ The final workload used 1,000 concurrent threads with ten iterations per thread.
 The measurements were collected against the application running in the local Docker environment. They demonstrate performance under the tested local conditions and should not be interpreted as public-cloud or internet performance.
 
 The test measured application API performance. It did not test a load balancer because the Compose environment contains one application container.
+
+### Lighthouse accessibility testing
+
+Chrome Lighthouse was used to assess performance, accessibility, best practices and SEO. Initial testing identified colour-contrast, ARIA-structure, semantic-role and touch-target issues.
+
+The findings were used to:
+
+- improve dashboard event-badge contrast;
+- increase assessment-notice text contrast;
+- replace an incomplete Word Search ARIA grid with valid grouped button semantics;
+- provide valid semantics for labelled Wordle tiles; and
+- increase Word Search cells to accessible touch-target dimensions.
+
+| Page        | Performance | Accessibility before | Accessibility after | Best Practices | SEO |
+| ----------- | ----------: | -------------------: | ------------------: | -------------: | --: |
+| Dashboard   |          99 |                   96 |                 100 |            100 | 100 |
+| Word Search |         100 |                   84 |                  96 |            100 | 100 |
+| Wordle      |          99 |                   93 |                  96 |            100 | 100 |
+
+The reports were generated against the application running locally in Docker. Generated Lighthouse HTML files are excluded from Git, while the results and improvements are documented here.
 
 ### Code-quality commands
 

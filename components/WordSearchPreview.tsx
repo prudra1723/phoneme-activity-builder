@@ -155,9 +155,9 @@ export default function WordSearchPreview({
         <div
           className="word-search-grid"
           style={{
-            gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${gridSize}, minmax(44px, 1fr))`,
           }}
-          role="grid"
+          role="group"
           aria-label="Phoneme word search grid"
         >
           {grid.map((symbol, index) => {
@@ -179,14 +179,13 @@ export default function WordSearchPreview({
             return (
               <button
                 type="button"
-                role="gridcell"
                 key={`${symbol}-${index}`}
                 className={stateClass}
                 title={hint}
                 aria-label={`${hint}. Row ${row}, column ${column}${
                   found ? ", found word" : ""
                 }`}
-                aria-selected={selected || found}
+                aria-pressed={selected || found}
                 onClick={() => chooseCell(index)}
               >
                 {symbol}

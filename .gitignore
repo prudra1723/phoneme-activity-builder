@@ -54,3 +54,6 @@ performance/reports/
 # macOS metadata
 .DS_Store
 **/.DS_Store
+
+# Lighthouse generated reports
+lighthouse-reports/
