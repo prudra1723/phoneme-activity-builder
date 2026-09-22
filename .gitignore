@@ -42,5 +42,15 @@ next-env.d.ts
 
 /app/generated/prisma
 
+# Playwright generated files
 playwright-report/
 test-results/
+
+# JMeter generated files
+jmeter.log
+performance/results/
+performance/reports/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
