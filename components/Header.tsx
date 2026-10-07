@@ -21,12 +21,7 @@ export default function Header() {
     <>
       <header className="site-header">
         <div className="header-container">
-          <Link
-            href="/"
-            className="brand"
-            aria-label="Phoneme Activity Builder home"
-            onClick={closeMenu}
-          >
+          <Link href="/" className="brand" onClick={closeMenu}>
             <span className="brand-icon" aria-hidden="true">
               /θ/
             </span>

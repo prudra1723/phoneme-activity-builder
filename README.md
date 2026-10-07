@@ -763,6 +763,24 @@ checks actual browser downloads.
 Generated reports remain available locally and are excluded from
 Git and lint checks.
 
+## Final Lighthouse verification — 7 October 2026
+
+| Page        | Performance | Accessibility | Best Practices | SEO |
+| ----------- | ----------: | ------------: | -------------: | --: |
+| Dashboard   |          87 |           100 |            100 | 100 |
+| Wordle      |          87 |           100 |            100 | 100 |
+| Word Search |          85 |           100 |            100 | 100 |
+
+Wordle and Word Search accessibility improved from 96 to 100 after
+darkening assessment-notice text. Redundant aria-label attributes were
+removed from brand links and phoneme buttons so their visible text
+provides their accessible names. Previously reported label mismatches
+were absent from the final reports.
+
+No automated accessibility checks failed in these final reports.
+Manual accessibility checks remain necessary. Performance scores vary
+between runs and are not evidence that the label changes improved speed.
+
 ## AI acknowledgement
 
 Generative AI was used as permitted by the assessment instructions to support planning, code explanation, debugging, test design, documentation and language refinement.

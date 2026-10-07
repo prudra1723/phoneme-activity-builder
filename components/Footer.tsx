@@ -6,11 +6,7 @@ export default function Footer() {
   return (
     <footer className="site-footer">
       <div className="footer-container">
-        <Link
-          href="/"
-          className="footer-brand"
-          aria-label="Phoneme Activity Builder home"
-        >
+        <Link href="/" className="footer-brand">
           <span className="footer-brand-mark" aria-hidden="true">
             /θ/
           </span>

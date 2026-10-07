@@ -22,16 +22,20 @@ export default function WordlePage() {
             </p>
           </div>
 
-          <aside className="assessment-notice" aria-label="Assessment scope">
+          <aside
+            className="assessment-notice"
+            aria-label="Saved activity workflow"
+          >
             <span className="assessment-notice-icon" aria-hidden="true">
               1
             </span>
 
             <div>
-              <strong>Assessment 1 scope</strong>
+              <strong>Build from saved activities</strong>
               <p>
-                Load saved phoneme words and activity settings from the backend,
-                preview the result and download a playable classroom activity.
+                Load a saved word and activity settings, preview your Wordle and
+                download a playable HTML file. Review generation activity on the
+                dashboard.
               </p>
             </div>
           </aside>
@@ -110,8 +114,8 @@ export default function WordlePage() {
               </span>
               <h3>One portable file</h3>
               <p>
-                The Generate button downloads one HTML file containing its own
-                layout, styles and gameplay JavaScript.
+                The Download playable HTML button creates one file containing
+                its own layout, styles and gameplay JavaScript.
               </p>
             </article>
           </div>

@@ -12,17 +12,18 @@ export default function PhonemeButton({
   disabled = false,
 }: Props) {
   const hint = getPhonemeHint(symbol);
+  const example = hint.split(" — ")[1] ?? symbol;
+
   return (
     <button
       type="button"
       className="phoneme-key"
       title={hint}
-      aria-label={`${hint}. Add phoneme.`}
       onClick={() => onClick(symbol)}
       disabled={disabled}
     >
       <span>/{symbol}/</span>
-      <small>{getPhonemeHint(symbol).split(" — ")[1] ?? symbol}</small>
+      <small>{example}</small>
     </button>
   );
 }

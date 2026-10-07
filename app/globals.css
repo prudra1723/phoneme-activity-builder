@@ -3517,3 +3517,8 @@ html[data-theme="dark"] .event-badge.validation_warning {
   background: var(--secondary-dark);
   color: #ffffff;
 }
+
+/* Improve assessment notice text contrast in light mode. */
+html:not([data-theme="dark"]) .assessment-notice p {
+  color: #475569;
+}

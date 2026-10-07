@@ -27,19 +27,18 @@ export default function WordSearchPage() {
 
           <aside
             className="assessment-notice"
-            aria-label="Assessment 1 project scope"
+            aria-label="Saved activity workflow"
           >
             <span className="assessment-notice-icon" aria-hidden="true">
               5
             </span>
 
             <div>
-              <strong>Assessment 1 scope</strong>
-
+              <strong>Build from saved word lists</strong>
               <p>
-                This frontend version uses five fixed phoneme words.
-                Database-driven word lists and more advanced generation will be
-                introduced in Assessment 2.
+                Load a saved activity and its word list, preview your Word
+                Search and download a playable HTML file. Review generation
+                activity on the dashboard.
               </p>
             </div>
           </aside>
