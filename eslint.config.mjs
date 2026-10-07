@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "performance/reports/**",
     "performance/results/**",
+    "performance/workflow-*/**",
   ]),
 ]);
 

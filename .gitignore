@@ -57,3 +57,5 @@ performance/reports/
 
 # Lighthouse generated reports
 lighthouse-reports/
+
+/performance/workflow-*/

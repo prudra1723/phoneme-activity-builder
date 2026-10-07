@@ -731,6 +731,38 @@ The project pins Prisma packages to `7.10.0`. Major-version upgrades should be h
 - Vercel. (2026). _Route Handlers_. <https://nextjs.org/docs/app/getting-started/route-handlers>
 - World Wide Web Consortium. (2024). _Web Content Accessibility Guidelines WCAG 2.2_. <https://www.w3.org/TR/WCAG22/>
 
+## Additional verification — 7 October 2026
+
+All six Playwright tests passed. Coverage includes browser-based word
+CRUD, saved Wordle and Word Search downloads, health checks, and
+API-level word-list CRUD with persisted word ordering.
+
+The JMeter builder-workflow plan performs nine requests per iteration:
+health, words, activities, dashboard metrics, both builder pages,
+word lists, and two simulated generation-event writes.
+
+| Threads | Iterations per thread | Requests | Average ms | Maximum ms | Requests/sec | Errors |
+| ------: | --------------------: | -------: | ---------: | ---------: | -----------: | -----: |
+|       1 |                     1 |        9 |          8 |         25 |         70.3 |     0% |
+|      10 |                     1 |       90 |          6 |         20 |         19.7 |     0% |
+|     100 |                     1 |      900 |          4 |         46 |         90.4 |     0% |
+|    1000 |                     1 |     9000 |          2 |         54 |        150.1 |     0% |
+|    1000 |                    10 |    90000 |        142 |       1456 |       1260.2 |     0% |
+
+Threads started gradually during the configured ramp-up. The final
+stage represents 10,000 workflow iterations, not 10,000 simultaneous
+users. All requests completed without reported errors, but latency
+increased at the largest workload.
+
+These measurements apply to the local Docker environment. JMeter
+does not execute browser JavaScript or generate playable HTML.
+Generation-event writes are explicitly labelled as simulations and
+are included in dashboard generation totals. Playwright separately
+checks actual browser downloads.
+
+Generated reports remain available locally and are excluded from
+Git and lint checks.
+
 ## AI acknowledgement
 
 Generative AI was used as permitted by the assessment instructions to support planning, code explanation, debugging, test design, documentation and language refinement.
